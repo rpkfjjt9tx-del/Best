@@ -36,7 +36,7 @@ button {
 }
 button:hover { box-shadow: 0 0 15px #ff69b4, 0 0 30px #ffb6c1; }
 img { width: 250px; border-radius: 15px; border: 3px solid white; }
-input { padding: 8px; border-radius: 8px; border: none; margin: 5px; }
+input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
 .message-card {
   background: rgba(255,255,255,0.2);
   padding: 10px;
@@ -73,13 +73,10 @@ input { padding: 8px; border-radius: 8px; border: none; margin: 5px; }
   <p class="countdown" id="countdown" style="display:none;"></p>
 </div>
 
-<!-- PAGE 2: Favorite Photo & Music -->
+<!-- PAGE 2: Favorite Photo -->
 <div class="section" id="page2" style="display:none;">
   <h2>Our Favorite Photo 🥰</h2>
   <img src="photo1.jpg" alt="Our Photo"><br>
-  <h3>Play Our Song 🎵</h3>
-  <button onclick="toggleMusic()">Play / Pause</button>
-  <audio id="music" src="your-music.mp3"></audio><br>
   <button onclick="goToQuestions()">Next ➡️</button>
   <button onclick="goBack(1)">Back ⬅️</button>
 </div>
@@ -102,15 +99,18 @@ input { padding: 8px; border-radius: 8px; border: none; margin: 5px; }
   <div id="messages"></div>
 </div>
 
-<!-- PAGE 4: Surprise -->
+<!-- PAGE 4: Surprise + Final Message -->
 <div class="section" id="page4" style="display:none;">
-  <h2>💖 You Are Reading My Special Message 💖</h2>
+  <h2>💖 Surprise! 💖</h2>
   <img src="surprise.PNG" alt="Surprise Photo"><br><br>
   <p>
     You are the most special person in my life 🥹💕<br>
     I have been with you since August 21, 2024 ❤️<br>
     Thank you for everything.<br>
-    You mean the world to me 🌎💖
+    You mean the world to me 🌎💖<br><br>
+    I miss my best ever person and I have never seen someone like you 💖<br>
+    You have a special place in my heart forever 🥰<br>
+    Do you love me? What’s the most special moment with me? 💌<br>
   </p>
   <button onclick="goBack(3)">Back ⬅️</button>
 </div>
@@ -121,32 +121,30 @@ document.getElementById("passwordBtn").addEventListener("click",()=>{
   const val=document.getElementById("passwordInput").value;
   if(val==="14122005"){
     startCountdown();
-  } else {
-    alert("❌ Wrong password! Hint: My Birthday");
-  }
+  } else { alert("❌ Wrong password! Hint: My Birthday"); }
 });
 
-// Countdown after password
+// Countdown to special date: August 21, 2024
 function startCountdown(){
-  let time=5; // seconds countdown
   const countdown=document.getElementById("countdown");
   countdown.style.display="block";
-  countdown.textContent=`Redirecting in ${time}...`;
-  const interval=setInterval(()=>{
-    time--;
-    countdown.textContent=`Redirecting in ${time}...`;
-    if(time<=0){
+  const targetDate = new Date("2024-08-21T00:00:00");
+  const interval = setInterval(()=>{
+    const now = new Date();
+    const diff = targetDate - now;
+    if(diff <=0){
       clearInterval(interval);
+      countdown.textContent="💖 Let's Go! 💖";
       document.getElementById("page1").style.display="none";
       document.getElementById("page2").style.display="block";
+      return;
     }
+    const days = Math.floor(diff/1000/60/60/24);
+    const hours = Math.floor((diff/1000/60/60)%24);
+    const minutes = Math.floor((diff/1000/60)%60);
+    const seconds = Math.floor((diff/1000)%60);
+    countdown.textContent=`Countdown: ${days}d ${hours}h ${minutes}m ${seconds}s`;
   },1000);
-}
-
-// Music
-function toggleMusic(){
-  const music=document.getElementById("music");
-  if(music.paused){ music.play(); } else { music.pause(); }
 }
 
 // Navigation
@@ -181,22 +179,19 @@ async function recordVoice(){
   if(recorder.state==="recording"){ recorder.stop(); } else { recorder.start(); }
 }
 
-// Submit to SheetDB
+// Submit to Google Sheet
 async function submitData(){
   const love=document.getElementById("love").value;
   const moment=document.getElementById("moment").value;
-
   await fetch("https://sheetdb.io/api/v1/klia6jc7w0l07",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({data:{loveAnswer:love,moment:moment,timestamp:new Date().toLocaleString()}})
   });
-
   const msg=document.createElement("div");
   msg.className="message-card";
   msg.innerHTML=`❤️ Love: ${love}<br>🥰 Moment: ${moment}`;
   document.getElementById("messages").appendChild(msg);
-
   alert("Saved to Google Sheet 💖");
 }
 
@@ -210,7 +205,6 @@ function createHeart(){
   setTimeout(()=>heart.remove(),5000);
 }
 setInterval(createHeart,400);
-
 </script>
 </body>
 </html>
