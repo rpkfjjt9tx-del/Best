@@ -42,6 +42,7 @@ input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
   padding: 10px;
   margin-top: 10px;
   border-radius: 10px;
+  word-wrap: break-word;
 }
 .countdown { font-size:1.3em; margin-top:15px; color:#fff; text-shadow:1px 1px 3px darkred; }
 /* Floating hearts */
@@ -70,10 +71,9 @@ input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
   <h2>Enter Password to Continue 💌</h2>
   <input type="text" id="passwordInput" placeholder="Hint: My Birthday">
   <button id="passwordBtn">Submit 🔑</button>
-  <p class="countdown" id="countdown" style="display:none;"></p>
 </div>
 
-<!-- PAGE 2: Favorite Photo with Countdown -->
+<!-- PAGE 2: Favorite Photo + Countdown -->
 <div class="section" id="page2" style="display:none;">
   <div class="countdown" id="photoCountdown"></div>
   <h2>Our Favorite Photo 🥰</h2>
@@ -89,11 +89,13 @@ input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
   <input type="text" id="love"><br>
   <p>Most special moment with me? 🥰</p>
   <input type="text" id="moment"><br>
+
   <h3>Upload a Photo 📸</h3>
   <input type="file" id="photoUpload" accept="image/*"><br>
   <h3>Record Voice Note 🎤</h3>
   <button onclick="recordVoice()">Record / Stop</button>
   <audio id="audioPlayer" controls style="display:none;"></audio><br>
+
   <button onclick="submitData()">Submit 💌</button>
   <button onclick="goToSurprise()">Surprise 🎁</button>
   <button onclick="goBack(2)">Back ⬅️</button>
@@ -116,34 +118,28 @@ input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
 
 <script>
 // Password Lock
-document.getElementById("passwordBtn").addEventListener("click",()=>{
-  const val=document.getElementById("passwordInput").value;
-  if(val==="14122005"){
+document.getElementById("passwordBtn").addEventListener("click", ()=>{
+  const val = document.getElementById("passwordInput").value;
+  if(val === "14122005"){
     startCountdown();
   } else { alert("❌ Wrong password! Hint: My Birthday"); }
 });
 
-// Countdown to special date: August 21, 2024
+// Countdown from now until August 21, 2024
 function startCountdown(){
-  const countdown=document.getElementById("photoCountdown");
-  document.getElementById("countdown").style.display="none";
-  document.getElementById("page1").style.display="none";
-  document.getElementById("page2").style.display="block";
-
+  document.getElementById("page1").style.display = "none";
+  document.getElementById("page2").style.display = "block";
+  const countdown = document.getElementById("photoCountdown");
   const targetDate = new Date("2024-08-21T00:00:00");
-  const interval = setInterval(()=>{
+  setInterval(()=>{
     const now = new Date();
-    const diff = targetDate - now;
-    if(diff <=0){
-      clearInterval(interval);
-      countdown.textContent="💖 Today is Our Special Day! 💖";
-      return;
-    }
+    let diff = targetDate - now;
+    if(diff < 0) diff = 0;
     const days = Math.floor(diff/1000/60/60/24);
     const hours = Math.floor((diff/1000/60/60)%24);
     const minutes = Math.floor((diff/1000/60)%60);
     const seconds = Math.floor((diff/1000)%60);
-    countdown.textContent=`Countdown: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+    countdown.textContent = `Together for: ${days}d ${hours}h ${minutes}m ${seconds}s`;
   },1000);
 }
 
@@ -161,50 +157,65 @@ function goBack(page){
 }
 
 // Voice Record
-let recorder;
-let audioBlob;
+let recorder, audioBlob;
 async function recordVoice(){
   if(!recorder){
-    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-    recorder=new MediaRecorder(stream);
-    const chunks=[];
-    recorder.ondataavailable=e=>chunks.push(e.data);
-    recorder.onstop=()=>{
-      audioBlob=new Blob(chunks,{type:'audio/ogg'});
-      const player=document.getElementById("audioPlayer");
-      player.src=URL.createObjectURL(audioBlob);
-      player.style.display="block";
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    recorder = new MediaRecorder(stream);
+    const chunks = [];
+    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.onstop = ()=>{
+      audioBlob = new Blob(chunks, {type:'audio/ogg'});
+      const player = document.getElementById("audioPlayer");
+      player.src = URL.createObjectURL(audioBlob);
+      player.style.display = "block";
     };
   }
-  if(recorder.state==="recording"){ recorder.stop(); } else { recorder.start(); }
+  if(recorder.state === "recording") recorder.stop(); else recorder.start();
 }
 
-// Submit to Google Sheet
+// Convert file to Base64
+function fileToBase64(file){ return new Promise((resolve,reject)=>{
+  const reader = new FileReader();
+  reader.onload = ()=>resolve(reader.result);
+  reader.onerror = error => reject(error);
+  reader.readAsDataURL(file);
+});}
+
+// Submit Data to SheetDB
 async function submitData(){
-  const love=document.getElementById("love").value;
-  const moment=document.getElementById("moment").value;
-  await fetch("https://sheetdb.io/api/v1/klia6jc7w0l07",{
+  const love = document.getElementById("love").value;
+  const moment = document.getElementById("moment").value;
+  const photoFile = document.getElementById("photoUpload").files[0];
+  let photoBase64 = "";
+  if(photoFile) photoBase64 = await fileToBase64(photoFile);
+  let audioBase64 = "";
+  if(audioBlob){
+    audioBase64 = await new Promise(res=>{
+      const reader = new FileReader();
+      reader.onload = e=>res(e.target.result);
+      reader.readAsDataURL(audioBlob);
+    });
+  }
+  await fetch("https://sheetdb.io/api/v1/m1mdy2b4n7l6u",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({data:{loveAnswer:love,moment:moment,timestamp:new Date().toLocaleString()}})
+    body:JSON.stringify({data:{timestamp:new Date().toLocaleString(),loveAnswer:love,moment:moment,photoBase64:photoBase64,audioBase64:audioBase64}})
   });
-  const msg=document.createElement("div");
-  msg.className="message-card";
-  msg.innerHTML=`❤️ Love: ${love}<br>🥰 Moment: ${moment}`;
-  document.getElementById("messages").appendChild(msg);
-  alert("Saved to Google Sheet 💖");
+  alert("💖 Your answers and uploads are saved to Google Sheet!");
 }
-
-// Floating Hearts
+  
+// Floating hearts
 function createHeart(){
-  const heart=document.createElement("div");
-  heart.className="heart";
-  heart.style.left=Math.random()*100+"vw";
-  heart.style.animationDuration=3+Math.random()*2+"s";
+  const heart = document.createElement("div");
+  heart.className = "heart";
+  heart.style.left = Math.random()*100+"vw";
+  heart.style.animationDuration = 3+Math.random()*2+"s";
   document.body.appendChild(heart);
   setTimeout(()=>heart.remove(),5000);
 }
 setInterval(createHeart,400);
 </script>
+
 </body>
 </html>
