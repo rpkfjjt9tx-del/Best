@@ -37,13 +37,6 @@ button {
 button:hover { box-shadow: 0 0 15px #ff69b4, 0 0 30px #ffb6c1; }
 img { width: 250px; border-radius: 15px; border: 3px solid white; }
 input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
-.message-card {
-  background: rgba(255,255,255,0.2);
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 10px;
-  word-wrap: break-word;
-}
 .countdown { font-size:1.3em; margin-top:15px; color:#fff; text-shadow:1px 1px 3px darkred; }
 /* Floating hearts */
 .heart {
@@ -99,7 +92,6 @@ input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
   <button onclick="submitData()">Submit 💌</button>
   <button onclick="goToSurprise()">Surprise 🎁</button>
   <button onclick="goBack(2)">Back ⬅️</button>
-  <div id="messages"></div>
 </div>
 
 <!-- PAGE 4: Surprise + Heartfelt Message -->
@@ -121,20 +113,20 @@ input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
 document.getElementById("passwordBtn").addEventListener("click", ()=>{
   const val = document.getElementById("passwordInput").value;
   if(val === "14122005"){
-    startCountdown();
+    showPage2();
   } else { alert("❌ Wrong password! Hint: My Birthday"); }
 });
 
-// Countdown from now until August 21, 2024
-function startCountdown(){
+// Countdown from August 21, 2024 until now
+function showPage2(){
   document.getElementById("page1").style.display = "none";
   document.getElementById("page2").style.display = "block";
+
   const countdown = document.getElementById("photoCountdown");
-  const targetDate = new Date("2024-08-21T00:00:00");
+  const startDate = new Date("2024-08-21T00:00:00");
   setInterval(()=>{
     const now = new Date();
-    let diff = targetDate - now;
-    if(diff < 0) diff = 0;
+    let diff = now - startDate; // time since August 21, 2024
     const days = Math.floor(diff/1000/60/60/24);
     const hours = Math.floor((diff/1000/60/60)%24);
     const minutes = Math.floor((diff/1000/60)%60);
@@ -182,13 +174,14 @@ function fileToBase64(file){ return new Promise((resolve,reject)=>{
   reader.readAsDataURL(file);
 });}
 
-// Submit Data to SheetDB
+// Submit Data to SheetDB with confirmation
 async function submitData(){
   const love = document.getElementById("love").value;
   const moment = document.getElementById("moment").value;
   const photoFile = document.getElementById("photoUpload").files[0];
   let photoBase64 = "";
   if(photoFile) photoBase64 = await fileToBase64(photoFile);
+
   let audioBase64 = "";
   if(audioBlob){
     audioBase64 = await new Promise(res=>{
@@ -197,14 +190,39 @@ async function submitData(){
       reader.readAsDataURL(audioBlob);
     });
   }
-  await fetch("https://sheetdb.io/api/v1/m1mdy2b4n7l6u",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({data:{timestamp:new Date().toLocaleString(),loveAnswer:love,moment:moment,photoBase64:photoBase64,audioBase64:audioBase64}})
-  });
-  alert("💖 Your answers and uploads are saved to Google Sheet!");
+
+  try {
+    const response = await fetch("https://sheetdb.io/api/v1/m1mdy2b4n7l6u", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        data:{
+          timestamp: new Date().toLocaleString(),
+          loveAnswer: love,
+          moment: moment,
+          photoBase64: photoBase64,
+          audioBase64: audioBase64
+        }
+      })
+    });
+
+    if(response.ok){
+      alert("✅ Successfully submitted! Your answers and uploads are saved.");
+      document.getElementById("love").value = "";
+      document.getElementById("moment").value = "";
+      document.getElementById("photoUpload").value = "";
+      audioBlob = null;
+      document.getElementById("audioPlayer").style.display = "none";
+    } else {
+      alert("❌ Submission failed. Please try again.");
+    }
+
+  } catch(err){
+    console.error(err);
+    alert("❌ Error connecting to SheetDB. Check your API URL and internet connection.");
+  }
 }
-  
+
 // Floating hearts
 function createHeart(){
   const heart = document.createElement("div");
