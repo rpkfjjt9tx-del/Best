@@ -73,8 +73,9 @@ input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
   <p class="countdown" id="countdown" style="display:none;"></p>
 </div>
 
-<!-- PAGE 2: Favorite Photo -->
+<!-- PAGE 2: Favorite Photo with Countdown -->
 <div class="section" id="page2" style="display:none;">
+  <div class="countdown" id="photoCountdown"></div>
   <h2>Our Favorite Photo 🥰</h2>
   <img src="photo1.jpg" alt="Our Photo"><br>
   <button onclick="goToQuestions()">Next ➡️</button>
@@ -99,18 +100,16 @@ input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
   <div id="messages"></div>
 </div>
 
-<!-- PAGE 4: Surprise + Final Message -->
+<!-- PAGE 4: Surprise + Heartfelt Message -->
 <div class="section" id="page4" style="display:none;">
   <h2>💖 Surprise! 💖</h2>
   <img src="surprise.PNG" alt="Surprise Photo"><br><br>
   <p>
-    You are the most special person in my life 🥹💕<br>
-    I have been with you since August 21, 2024 ❤️<br>
-    Thank you for everything.<br>
-    You mean the world to me 🌎💖<br><br>
-    I miss my best ever person and I have never seen someone like you 💖<br>
-    You have a special place in my heart forever 🥰<br>
-    Do you love me? What’s the most special moment with me? 💌<br>
+    I just want you to know that you are truly a special person 🌟. 
+    There’s something about you that’s unlike anyone else I’ve ever met 💖 — 
+    your kindness, your smile 😊, the way you make people feel seen and valued 🌈. 
+    You hold a special place in my heart ❤️, and I can’t help but admire everything that makes you uniquely you ✨. 
+    The world feels brighter just because you’re in it ☀️, and I hope you never forget how important and amazing you are 🌹💫.
   </p>
   <button onclick="goBack(3)">Back ⬅️</button>
 </div>
@@ -126,17 +125,18 @@ document.getElementById("passwordBtn").addEventListener("click",()=>{
 
 // Countdown to special date: August 21, 2024
 function startCountdown(){
-  const countdown=document.getElementById("countdown");
-  countdown.style.display="block";
+  const countdown=document.getElementById("photoCountdown");
+  document.getElementById("countdown").style.display="none";
+  document.getElementById("page1").style.display="none";
+  document.getElementById("page2").style.display="block";
+
   const targetDate = new Date("2024-08-21T00:00:00");
   const interval = setInterval(()=>{
     const now = new Date();
     const diff = targetDate - now;
     if(diff <=0){
       clearInterval(interval);
-      countdown.textContent="💖 Let's Go! 💖";
-      document.getElementById("page1").style.display="none";
-      document.getElementById("page2").style.display="block";
+      countdown.textContent="💖 Today is Our Special Day! 💖";
       return;
     }
     const days = Math.floor(diff/1000/60/60/24);
