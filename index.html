@@ -12,7 +12,6 @@ body {
   text-align: center;
   padding: 40px;
   color: white;
-  overflow-x: hidden;
 }
 h1 { font-size: 2.5em; text-shadow: 2px 2px 5px deeppink; }
 .section {
@@ -31,27 +30,9 @@ button {
   color: white;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.3s;
 }
-button:hover { box-shadow: 0 0 15px #ff69b4, 0 0 30px #ffb6c1; }
-img { width: 250px; border-radius: 15px; border: 3px solid white; }
 input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
 .countdown { font-size:1.3em; margin-top:15px; color:#fff; text-shadow:1px 1px 3px darkred; }
-/* Floating hearts */
-.heart {
-  position: fixed;
-  width: 20px;
-  height: 20px;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 29.6"><path fill="deeppink" d="M23.6,0C20.4,0,16,3.5,16,3.5S11.6,0,8.4,0C3.8,0,0,3.8,0,8.4c0,5.2,5.3,10.4,13.4,17.3L16,29.6l2.6-3.9C26.7,18.8,32,13.6,32,8.4C32,3.8,28.2,0,23.6,0z"/></svg>') no-repeat center;
-  background-size: contain;
-  pointer-events: none;
-  animation: floatUp linear infinite;
-}
-@keyframes floatUp {
-  0% { transform: translateY(100vh) scale(0.5); opacity:0; }
-  10% { opacity:1; }
-  100% { transform: translateY(-10vh) scale(1); opacity:0; }
-}
 </style>
 </head>
 <body>
@@ -65,39 +46,27 @@ input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
   <button id="passwordBtn">Submit 🔑</button>
 </div>
 
-<!-- PAGE 2: Favorite Photo + Countdown -->
+<!-- PAGE 2: Countdown -->
 <div class="section" id="page2" style="display:none;">
   <div class="countdown" id="photoCountdown"></div>
-  <h2>Our Favorite Photo 🥰</h2>
-  <img src="photo1.jpg" alt="Our Photo"><br>
   <button onclick="goToQuestions()">Next ➡️</button>
   <button onclick="goBack(1)">Back ⬅️</button>
 </div>
 
-<!-- PAGE 3: Questions + Upload -->
+<!-- PAGE 3: Questions -->
 <div class="section" id="page3" style="display:none;">
   <h2>Answer This 💕</h2>
   <p>Do you love me? ❤️</p>
   <input type="text" id="love"><br>
   <p>Most special moment with me? 🥰</p>
   <input type="text" id="moment"><br>
-
-  <h3>Upload a Photo 📸 (optional)</h3>
-  <input type="file" id="photoUpload" accept="image/*"><br>
-  
-  <h3>Record Voice Note 🎤 (optional)</h3>
-  <button onclick="recordVoice()">Record / Stop</button>
-  <audio id="audioPlayer" controls style="display:none;"></audio><br>
-
   <button onclick="submitData()">Submit 💌</button>
-  <button onclick="goToSurprise()">Surprise 🎁</button>
   <button onclick="goBack(2)">Back ⬅️</button>
 </div>
 
-<!-- PAGE 4: Surprise + Heartfelt Message -->
+<!-- PAGE 4: Surprise Message -->
 <div class="section" id="page4" style="display:none;">
   <h2>💖 Surprise! 💖</h2>
-  <img src="surprise.PNG" alt="Surprise Photo"><br><br>
   <p>
     I just want you to know that you are truly a special person 🌟.  
     There’s something about you that’s unlike anyone else I’ve ever met 💖 —  
@@ -140,10 +109,6 @@ function goToQuestions(){
   document.getElementById("page2").style.display="none";
   document.getElementById("page3").style.display="block";
 }
-function goToSurprise(){
-  document.getElementById("page3").style.display="none";
-  document.getElementById("page4").style.display="block";
-}
 function goBack(page){
   document.getElementById("page1").style.display="none";
   document.getElementById("page2").style.display="none";
@@ -154,49 +119,14 @@ function goBack(page){
   if(page===3) document.getElementById("page3").style.display="block";
 }
 
-// Voice record
-let recorder, audioBlob;
-async function recordVoice(){
-  if(!recorder){
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    recorder = new MediaRecorder(stream);
-    const chunks=[];
-    recorder.ondataavailable=e=>chunks.push(e.data);
-    recorder.onstop=()=>{
-      audioBlob=new Blob(chunks,{type:'audio/ogg'});
-      const p=document.getElementById("audioPlayer");
-      p.src=URL.createObjectURL(audioBlob);
-      p.style.display="block";
-    };
-  }
-  recorder.state==="recording"? recorder.stop() : recorder.start();
-}
-
-// Convert file to Base64
-function fileToBase64(file){
-  return new Promise((resolve,reject)=>{
-    const r=new FileReader();
-    r.onload=()=>resolve(r.result);
-    r.onerror=err=>reject(err);
-    r.readAsDataURL(file);
-  });
-}
-
 // Submit to SheetDB
 async function submitData(){
   const love = document.getElementById("love").value;
   const moment = document.getElementById("moment").value;
-  const photoFile = document.getElementById("photoUpload").files[0];
-  let photoBase64 = "";
-  if(photoFile) photoBase64 = await fileToBase64(photoFile);
 
-  let audioBase64 = "";
-  if(audioBlob){
-    audioBase64 = await new Promise(res =>{
-      const reader=new FileReader();
-      reader.onload=e=>res(e.target.result);
-      reader.readAsDataURL(audioBlob);
-    });
+  if(love.trim()==="" || moment.trim()===""){
+    alert("❌ Please answer all questions before submitting!");
+    return;
   }
 
   try {
@@ -207,9 +137,7 @@ async function submitData(){
         data:{
           timestamp: new Date().toLocaleString(),
           loveAnswer: love,
-          moment: moment,
-          photoBase64: photoBase64,
-          audioBase64: audioBase64
+          moment: moment
         }
       })
     });
@@ -217,27 +145,16 @@ async function submitData(){
       alert("✅ Submitted successfully!");
       document.getElementById("love").value="";
       document.getElementById("moment").value="";
-      document.getElementById("photoUpload").value="";
-      audioBlob=null;
-      document.getElementById("audioPlayer").style.display="none";
+      // Go to surprise page
+      document.getElementById("page3").style.display="none";
+      document.getElementById("page4").style.display="block";
     } else alert("❌ Submission failed. Try again.");
   } catch(e){
     console.error(e);
     alert("❌ Error connecting to SheetDB.");
   }
 }
-
-// Floating hearts
-function createHeart(){
-  const heart=document.createElement("div");
-  heart.className="heart";
-  heart.style.left = Math.random()*100+"vw";
-  heart.style.animationDuration = 3+Math.random()*2+"s";
-  document.body.appendChild(heart);
-  setTimeout(()=>heart.remove(),5000);
-}
-setInterval(createHeart,400);
-
 </script>
+
 </body>
 </html>
