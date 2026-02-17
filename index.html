@@ -33,6 +33,8 @@ button {
 }
 input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
 .countdown { font-size:1.3em; margin-top:15px; color:#fff; text-shadow:1px 1px 3px darkred; }
+img { width: 250px; border-radius: 15px; border: 3px solid white; margin:10px 0; }
+audio { margin:10px 0; }
 </style>
 </head>
 <body>
@@ -46,27 +48,39 @@ input { padding: 8px; border-radius: 8px; border: none; margin:5px; }
   <button id="passwordBtn">Submit 🔑</button>
 </div>
 
-<!-- PAGE 2: Countdown -->
+<!-- PAGE 2: Favorite Photo + Countdown -->
 <div class="section" id="page2" style="display:none;">
   <div class="countdown" id="photoCountdown"></div>
+  <h2>Our Favorite Photo 🥰</h2>
+  <img src="https://rpkfjjt9tx-del.github.io/Best/photo1.jpg" alt="Our Favorite Photo">
+  <br>
   <button onclick="goToQuestions()">Next ➡️</button>
   <button onclick="goBack(1)">Back ⬅️</button>
 </div>
 
-<!-- PAGE 3: Questions -->
+<!-- PAGE 3: Questions + Upload -->
 <div class="section" id="page3" style="display:none;">
   <h2>Answer This 💕</h2>
   <p>Do you love me? ❤️</p>
   <input type="text" id="love"><br>
   <p>Most special moment with me? 🥰</p>
   <input type="text" id="moment"><br>
+
+  <h3>Upload a Photo 📸 (optional)</h3>
+  <input type="file" id="photoUpload" accept="image/*"><br>
+  
+  <h3>Record Voice Note 🎤 (optional)</h3>
+  <button onclick="recordVoice()">Record / Stop</button>
+  <audio id="audioPlayer" controls style="display:none;"></audio><br>
+
   <button onclick="submitData()">Submit 💌</button>
   <button onclick="goBack(2)">Back ⬅️</button>
 </div>
 
-<!-- PAGE 4: Surprise Message -->
+<!-- PAGE 4: Surprise + Message -->
 <div class="section" id="page4" style="display:none;">
   <h2>💖 Surprise! 💖</h2>
+  <img src="https://rpkfjjt9tx-del.github.io/Best/surprise.jpg" alt="Surprise Photo"><br><br>
   <p>
     I just want you to know that you are truly a special person 🌟.  
     There’s something about you that’s unlike anyone else I’ve ever met 💖 —  
@@ -119,13 +133,53 @@ function goBack(page){
   if(page===3) document.getElementById("page3").style.display="block";
 }
 
+// Voice record
+let recorder, audioBlob;
+async function recordVoice(){
+  if(!recorder){
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    recorder = new MediaRecorder(stream);
+    const chunks=[];
+    recorder.ondataavailable=e=>chunks.push(e.data);
+    recorder.onstop=()=>{
+      audioBlob=new Blob(chunks,{type:'audio/ogg'});
+      const p=document.getElementById("audioPlayer");
+      p.src=URL.createObjectURL(audioBlob);
+      p.style.display="block";
+    };
+  }
+  recorder.state==="recording"? recorder.stop() : recorder.start();
+}
+
+// Convert file to Base64
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(r.result);
+    r.onerror=err=>reject(err);
+    r.readAsDataURL(file);
+  });
+}
+
 // Submit to SheetDB
 async function submitData(){
   const love = document.getElementById("love").value;
   const moment = document.getElementById("moment").value;
+  const photoFile = document.getElementById("photoUpload").files[0];
+  let photoBase64 = "";
+  if(photoFile) photoBase64 = await fileToBase64(photoFile);
+
+  let audioBase64 = "";
+  if(audioBlob){
+    audioBase64 = await new Promise(res =>{
+      const reader=new FileReader();
+      reader.onload=e=>res(e.target.result);
+      reader.readAsDataURL(audioBlob);
+    });
+  }
 
   if(love.trim()==="" || moment.trim()===""){
-    alert("❌ Please answer all questions before submitting!");
+    alert("❌ Please answer all questions!");
     return;
   }
 
@@ -137,7 +191,11 @@ async function submitData(){
         data:{
           timestamp: new Date().toLocaleString(),
           loveAnswer: love,
-          moment: moment
+          moment: moment,
+          photoBase64: photoBase64,
+          audioBase64: audioBase64,
+          favoritePhotoLink: "https://rpkfjjt9tx-del.github.io/Best/photo1.jpg",
+          surprisePhotoLink: "https://rpkfjjt9tx-del.github.io/Best/surprise.jpg"
         }
       })
     });
@@ -145,6 +203,9 @@ async function submitData(){
       alert("✅ Submitted successfully!");
       document.getElementById("love").value="";
       document.getElementById("moment").value="";
+      document.getElementById("photoUpload").value="";
+      audioBlob=null;
+      document.getElementById("audioPlayer").style.display="none";
       // Go to surprise page
       document.getElementById("page3").style.display="none";
       document.getElementById("page4").style.display="block";
