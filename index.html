@@ -71,7 +71,7 @@ input[type="file"] { margin-top:10px; }
 <!-- Page 4: Surprise -->
 <div class="surprise-section" id="page4">
   <h2>💖 You Have a Surprise! 🥰</h2>
-  <img src="surprise.jpg" alt="Surprise Photo">
+  <img src="surprise.PNG" alt="Surprise Photo">
   <p id="surpriseMessage" style="font-size:1.2em; color:#fff; text-shadow:1px 1px 2px darkred;">
     💌 Hey bestie! I just wanted to say… you are the most special person in my life! 💖🥰
   </p>
@@ -175,7 +175,7 @@ document.getElementById('submitMemory').addEventListener('click', async()=>{
     formData.append('image',photoInput);
     const res=await fetch('https://api.imgur.com/3/image',{
       method:'POST',
-      headers:{ Authorization: 'Client-ID YOUR_IMGUR_CLIENT_ID' }, // Replace with your Imgur client ID
+      headers:{ Authorization: 'Client-ID YOUR_IMGUR_CLIENT_ID' },
       body: formData
     });
     const data=await res.json();
