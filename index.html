@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>💖 My Best Person Ever 💖</title>
-
 <style>
 body {
   font-family: 'Comic Sans MS', cursive, sans-serif;
@@ -15,9 +14,7 @@ body {
   color: white;
   overflow-x: hidden;
 }
-
 h1 { font-size: 2.5em; text-shadow: 2px 2px 5px deeppink; }
-
 .section {
   background: rgba(255,105,180,0.7);
   padding: 20px;
@@ -26,7 +23,6 @@ h1 { font-size: 2.5em; text-shadow: 2px 2px 5px deeppink; }
   max-width: 500px;
   position: relative;
 }
-
 button {
   background: hotpink;
   border: none;
@@ -38,21 +34,16 @@ button {
   cursor: pointer;
   transition: 0.3s;
 }
-button:hover {
-  box-shadow: 0 0 15px #ff69b4, 0 0 30px #ffb6c1;
-}
-
+button:hover { box-shadow: 0 0 15px #ff69b4, 0 0 30px #ffb6c1; }
 img { width: 250px; border-radius: 15px; border: 3px solid white; }
-
 input { padding: 8px; border-radius: 8px; border: none; margin: 5px; }
-
 .message-card {
   background: rgba(255,255,255,0.2);
   padding: 10px;
   margin-top: 10px;
   border-radius: 10px;
 }
-
+.countdown { font-size:1.3em; margin-top:15px; color:#fff; text-shadow:1px 1px 3px darkred; }
 /* Floating hearts */
 .heart {
   position: fixed;
@@ -70,108 +61,127 @@ input { padding: 8px; border-radius: 8px; border: none; margin: 5px; }
 }
 </style>
 </head>
-
 <body>
 
 <h1>💖 My Best Person Ever 💖</h1>
 
-<!-- PAGE 1 -->
+<!-- PAGE 1: Password -->
 <div class="section" id="page1">
-  <h2>Our Favorite Photo 🥰</h2>
-  <img src="photo1.jpg" alt="Our Photo"><br>
-
-  <h3>Play Our Song 🎵</h3>
-  <button onclick="toggleMusic()">Play / Pause</button>
-  <audio id="music" src="your-music.mp3"></audio>
-
-  <br>
-  <button onclick="goToPage2()">Next ➡️</button>
+  <h2>Enter Password to Continue 💌</h2>
+  <input type="text" id="passwordInput" placeholder="Hint: My Birthday">
+  <button id="passwordBtn">Submit 🔑</button>
+  <p class="countdown" id="countdown" style="display:none;"></p>
 </div>
 
-<!-- PAGE 2 -->
+<!-- PAGE 2: Favorite Photo & Music -->
 <div class="section" id="page2" style="display:none;">
-  <h2>Answer This 💕</h2>
+  <h2>Our Favorite Photo 🥰</h2>
+  <img src="photo1.jpg" alt="Our Photo"><br>
+  <h3>Play Our Song 🎵</h3>
+  <button onclick="toggleMusic()">Play / Pause</button>
+  <audio id="music" src="your-music.mp3"></audio><br>
+  <button onclick="goToQuestions()">Next ➡️</button>
+  <button onclick="goBack(1)">Back ⬅️</button>
+</div>
 
+<!-- PAGE 3: Questions + Upload -->
+<div class="section" id="page3" style="display:none;">
+  <h2>Answer This 💕</h2>
   <p>Do you love me? ❤️</p>
   <input type="text" id="love"><br>
-
   <p>Most special moment with me? 🥰</p>
   <input type="text" id="moment"><br>
-
   <h3>Upload a Photo 📸</h3>
   <input type="file" id="photoUpload" accept="image/*"><br>
-
   <h3>Record Voice Note 🎤</h3>
   <button onclick="recordVoice()">Record / Stop</button>
-  <audio id="audioPlayer" controls style="display:none;"></audio>
-
-  <br>
+  <audio id="audioPlayer" controls style="display:none;"></audio><br>
   <button onclick="submitData()">Submit 💌</button>
   <button onclick="goToSurprise()">Surprise 🎁</button>
-
+  <button onclick="goBack(2)">Back ⬅️</button>
   <div id="messages"></div>
 </div>
 
-<!-- PAGE 3 SURPRISE -->
-<div class="section" id="page3" style="display:none;">
+<!-- PAGE 4: Surprise -->
+<div class="section" id="page4" style="display:none;">
   <h2>💖 You Are Reading My Special Message 💖</h2>
   <img src="surprise.PNG" alt="Surprise Photo"><br><br>
-
   <p>
-    You are the most special person in my life 🥹💕  
-    I have been with you since August 21, 2024 ❤️  
-    Thank you for everything.  
-    You mean the world to me 🌎💖  
+    You are the most special person in my life 🥹💕<br>
+    I have been with you since August 21, 2024 ❤️<br>
+    Thank you for everything.<br>
+    You mean the world to me 🌎💖
   </p>
-
-  <button onclick="goBack()">Back</button>
+  <button onclick="goBack(3)">Back ⬅️</button>
 </div>
 
 <script>
-// MUSIC
+// Password Lock
+document.getElementById("passwordBtn").addEventListener("click",()=>{
+  const val=document.getElementById("passwordInput").value;
+  if(val==="14122005"){
+    startCountdown();
+  } else {
+    alert("❌ Wrong password! Hint: My Birthday");
+  }
+});
+
+// Countdown after password
+function startCountdown(){
+  let time=5; // seconds countdown
+  const countdown=document.getElementById("countdown");
+  countdown.style.display="block";
+  countdown.textContent=`Redirecting in ${time}...`;
+  const interval=setInterval(()=>{
+    time--;
+    countdown.textContent=`Redirecting in ${time}...`;
+    if(time<=0){
+      clearInterval(interval);
+      document.getElementById("page1").style.display="none";
+      document.getElementById("page2").style.display="block";
+    }
+  },1000);
+}
+
+// Music
 function toggleMusic(){
-  const music = document.getElementById("music");
+  const music=document.getElementById("music");
   if(music.paused){ music.play(); } else { music.pause(); }
 }
 
-// PAGE NAVIGATION
-function goToPage2(){
+// Navigation
+function goToQuestions(){ document.getElementById("page2").style.display="none"; document.getElementById("page3").style.display="block"; }
+function goToSurprise(){ document.getElementById("page3").style.display="none"; document.getElementById("page4").style.display="block"; }
+function goBack(page){
   document.getElementById("page1").style.display="none";
-  document.getElementById("page2").style.display="block";
-}
-
-function goToSurprise(){
   document.getElementById("page2").style.display="none";
-  document.getElementById("page3").style.display="block";
-}
-
-function goBack(){
   document.getElementById("page3").style.display="none";
-  document.getElementById("page2").style.display="block";
+  document.getElementById("page4").style.display="none";
+  if(page===1) document.getElementById("page1").style.display="block";
+  if(page===2) document.getElementById("page2").style.display="block";
+  if(page===3) document.getElementById("page3").style.display="block";
 }
 
-// VOICE RECORD
+// Voice Record
 let recorder;
 let audioBlob;
 async function recordVoice(){
   if(!recorder){
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    recorder = new MediaRecorder(stream);
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    recorder=new MediaRecorder(stream);
     const chunks=[];
     recorder.ondataavailable=e=>chunks.push(e.data);
     recorder.onstop=()=>{
       audioBlob=new Blob(chunks,{type:'audio/ogg'});
-      const audioURL=URL.createObjectURL(audioBlob);
       const player=document.getElementById("audioPlayer");
-      player.src=audioURL;
+      player.src=URL.createObjectURL(audioBlob);
       player.style.display="block";
     };
   }
-
   if(recorder.state==="recording"){ recorder.stop(); } else { recorder.start(); }
 }
 
-// SUBMIT TO GOOGLE SHEET
+// Submit to SheetDB
 async function submitData(){
   const love=document.getElementById("love").value;
   const moment=document.getElementById("moment").value;
@@ -190,18 +200,17 @@ async function submitData(){
   alert("Saved to Google Sheet 💖");
 }
 
-// FLOATING HEARTS
+// Floating Hearts
 function createHeart(){
   const heart=document.createElement("div");
   heart.className="heart";
   heart.style.left=Math.random()*100+"vw";
   heart.style.animationDuration=3+Math.random()*2+"s";
-  heart.style.fontSize=(10+Math.random()*20)+"px";
   document.body.appendChild(heart);
   setTimeout(()=>heart.remove(),5000);
 }
 setInterval(createHeart,400);
-</script>
 
+</script>
 </body>
 </html>
